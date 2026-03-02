@@ -1,6 +1,8 @@
 ## SQL PRACTISE
 
 ```
+
+
 CREATE DATABASE college;
 
 -- USE college; 
