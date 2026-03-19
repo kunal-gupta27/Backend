@@ -5,6 +5,18 @@ const path = require("path");
 const Chat = require("./models/chat.js");
 const methodOverride = require("method-override");
 const { log } = require("console");
+const ExpressError = require("./ExpressError.js");
+
+
+main().then(()=>{
+    console.log("connection successful");  
+})
+.catch(err => console.log(err));
+
+async function main() {
+//   await mongoose.connect('mongodb://127.0.0.1:27017/whatsapp');
+     await mongoose.connect('mongodb://127.0.0.1:27017/fakewhatsapp');
+}
 
 
 app.set("views", path.join(__dirname, "views"));
@@ -13,14 +25,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({extended: true}));
 app.use(methodOverride("_method"));
 
-main().then(()=>{
-    console.log("connection successful");  
-})
-.catch(err => console.log(err));
-
-async function main() {
-  await mongoose.connect('mongodb://127.0.0.1:27017/whatsapp');
-}
 
 // let Chat1 = new Chat({
 //     from:"neha",
@@ -33,6 +37,25 @@ async function main() {
 //     console.log(res); 
 // })
 
+
+//ishi route ko kyu use kiya bcz yai route async nhi hain
+//New Route
+app.get("/chats/new",(req,res)=>{
+    throw new ExpressError(404, "Page Not Found");
+    res.render("new.ejs");
+});
+
+
+//New for fake watsaap -> Show route
+app.get("/chats/:id", async (req, res, next)=>{
+    let {id} = req.params;
+    let chat = await Chat.findById(id);
+    if(!chat){
+       throw new ExpressError(404, "chat Not Found");
+    }
+    res.render("edit.ejs", {chat});
+});
+
 // Index Routes
 
 app.get("/chats", async (req, res)=>{
@@ -42,10 +65,12 @@ app.get("/chats", async (req, res)=>{
     
 })
 
-//New Route
-app.get("/chats/new",(req,res)=>{
-    res.render("new.ejs");
-})
+// //ishi route ko kyu use kiya bcz yai route async nhi hain
+// //New Route
+// app.get("/chats/new",(req,res)=>{
+//     throw new ExpressError(404, "Page Not Found");
+//     res.render("new.ejs");
+// });
 
 //Create Route
 app.post("/chats",(req, res)=>{
@@ -98,6 +123,13 @@ app.delete("/chats/:id", async (req, res)=>{
 app.get("/",(req, res)=>{
     res.send("root is working")
 })
+
+//Error Handling Middleware
+app.use((err, req, res, next)=>{
+    let{status=500, message="Some Error Occured"} = err;
+    res.status(status).send(message);
+});
+
 
 app.listen(8080, ()=>{
     console.log("server is listening on port 8080");
