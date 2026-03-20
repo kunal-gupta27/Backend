@@ -41,29 +41,37 @@ app.use(methodOverride("_method"));
 //ishi route ko kyu use kiya bcz yai route async nhi hain
 //New Route
 app.get("/chats/new",(req,res)=>{
-    throw new ExpressError(404, "Page Not Found");
+    // throw new ExpressError(404, "Page Not Found");
     res.render("new.ejs");
 });
 
+function asynWrap(fn){
+    return function(req, res, next){
+        fn(req, res, next).catch(err => next(err)); 
+    }
+}
 
 //New for fake watsaap -> Show route
 app.get("/chats/:id", async (req, res, next)=>{
     let {id} = req.params;
     let chat = await Chat.findById(id);
-    if(!chat){
-       throw new ExpressError(404, "chat Not Found");
-    }
+    // if(!chat){
+    //    next(new ExpressError(500, "chat Not Found"));
+    // }
     res.render("edit.ejs", {chat});
 });
 
 // Index Routes
 
 app.get("/chats", async (req, res)=>{
-    let chats = await Chat.find();
-    console.log(chats);
-    res.render("index.ejs", {chats});
-    
-})
+    try{
+        let chats = await Chat.find();
+        console.log(chats);
+        res.render("index.ejs", {chats});
+    }catch(err){
+        next(err);
+    }
+});
 
 // //ishi route ko kyu use kiya bcz yai route async nhi hain
 // //New Route
@@ -123,6 +131,12 @@ app.delete("/chats/:id", async (req, res)=>{
 app.get("/",(req, res)=>{
     res.send("root is working")
 })
+
+// app.use((err, req, res, next)=>{
+//     console.log(err.name);
+//     next(err);
+// })
+
 
 //Error Handling Middleware
 app.use((err, req, res, next)=>{
